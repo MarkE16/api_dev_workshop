@@ -1,0 +1,345 @@
+<!--
+The following file contains boilerplate code for our frontend application.
+It includes the React and ReactDOM CDN links, as well as the Babel CDN link to support JSX in the browser.
+
+You should not have to make any changes to this file.
+However, if you wish to experiment with this file, you may do so.
+If you do not understand React and how it works, that's okay.
+There will be comments in the file to explain what each part does.
+
+If you are interested in learning React, visit the official React documentation at
+https://react.dev/docs/getting-started.html
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Todo App</title>
+  </head>
+  <body>
+    <div id="entry"></div>
+
+    <!-- React and ReactDOM CDN links -->
+    <script
+      src="https://unpkg.com/react@17/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+
+    <!-- Babel to support JSX in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+      const BACKEND_URL = "http://localhost:5120"; // Where our API is running.
+
+      // Our TodoItem component.
+      // This will show a single todo item.
+      const TodoItem = ({ item }) => {
+        // Use the useState hook to create a state variable called completed,
+        // which will store whether the todo item is completed or not.
+        // We also have a function called setCompleted that we can use to update the completed state.
+        const [completed, setCompleted] = useState(item.completed);
+
+        // Use the useState hook to create a state variable called updating,
+        // which will store whether we are currently updating the todo item.
+        // We also have a function called setUpdating that we can use to update the updating state.
+        // It is similar to loading and saving, but for updating the todo's current state (when editing or deleting).
+        const [updating, setUpdating] = useState(false);
+
+        const onCompletedChange = (event) => setCompleted(event.target.checked);
+
+        // Function to handle editing a todo item.
+        const handleEdit = async () => {
+          const newTitle = window.prompt("What should this todo be called?");
+
+          if (!newTitle) {
+            alert("Cannot allow an empty todo title.");
+            return;
+          }
+
+          setUpdating(true); // Set updating to true to indicate that we are updating the todo item.
+          try {
+            // Update the todo item on the server.
+            // NOTE: We are using the browser's Fetch API here.
+            // We are using the PUT method to update the todo item.
+            // We are also sending JSON data in the request body.
+            // The JSON data contains the new title for the todo item.
+            const request = await fetch(`${BACKEND_URL}/todos/${item.id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: newTitle,
+            });
+
+            if (request.ok) {
+              alert("Todo updated successfully!");
+            } else {
+              alert("Failed to update todo.");
+            }
+          } catch (e) {
+            console.error(e);
+            alert("An error occurred while updating the todo.");
+          } finally {
+            setUpdating(false); // Set updating to false to indicate that we are done updating the todo item.
+          }
+        };
+
+        // Function to handle deleting a todo item.
+        const handleDelete = async () => {
+          if (!window.confirm("Are you sure you want to delete this todo?")) {
+            return;
+          }
+
+          setUpdating(true); // Set updating to true to indicate that we are updating the todo item.
+          try {
+            // Delete the todo item on the server.
+            // NOTE: We are using the browser's Fetch API here.
+            // We are using the DELETE method to delete the todo item.
+            const request = await fetch(`${BACKEND_URL}/todos/${item.id}`, {
+              method: "DELETE",
+            });
+
+            if (request.ok) {
+              alert("Todo deleted successfully!");
+            } else {
+              alert("Failed to delete todo.");
+            }
+          } catch (e) {
+            console.error(e);
+            alert("An error occurred while deleting the todo.");
+          } finally {
+            setUpdating(false); // Set updating to false to indicate that we are done updating the todo item.
+          }
+        };
+
+        // Display the following JSX (HTML-like elements) to the page when this component is rendered.
+        return (
+          <div style={{ display: "flex", listStyle: "none" }}>
+            <input
+              id={item.id}
+              type="checkbox"
+              checked={completed}
+              onChange={onCompletedChange}
+            />
+            <li>
+              <label
+                style={{
+                  textDecoration: completed ? "line-through" : "none",
+                  color: completed ? "gray" : "black",
+                }}
+                htmlFor={item.id}
+              >
+                {item.title}
+              </label>
+            </li>
+            <button disabled={updating} onClick={handleEdit}>
+              Edit
+            </button>
+            <button disabled={updating} onClick={handleDelete}>
+              Delete
+            </button>
+          </div>
+        );
+      };
+
+      // Our TodoList component.
+      // This will show a list of todos based on what we pass into the
+      // items prop (or parameter, if you're not familiar with React yet)
+      const TodoList = ({ items }) => {
+        // Display the following JSX (HTML-like elements) to the page when this component is rendered.
+        return (
+          <ul>
+            {items.map((item) => (
+              <TodoItem key={item.id} item={item} />
+            ))}
+          </ul>
+        );
+      };
+
+      // Our main App component.
+      // This will show the entire webpage.
+      const App = () => {
+        // Use the useState hook to create a state variable called todos,
+        // which will store our list of todos.
+        // We also have a function called setTodos that we can use to update the todos state.
+        const [todos, setTodos] = useState([
+          {
+            id: 1,
+            title: "Learn React",
+            completed: false,
+          },
+          {
+            id: 2,
+            title: "Learn Node.js",
+            completed: false,
+          },
+        ]);
+
+        // Use the useState hook to create a state variable called newTodo,
+        // which will store the title of a new todo item.
+        // We also have a function called setNewTodo that we can use to update the newTodo state.
+        const [newTodo, setNewTodo] = useState("");
+
+        // Use the useState hook to create a state variable called loading,
+        // which will store whether we are currently loading data from the server.
+        // We also have a function called setLoading that we can use to update the loading state.
+        // We set loading to true by default because we are loading data when the component mounts.
+        const [loading, setLoading] = useState(true);
+
+        // Use the useState hook to create a state variable called saving,
+        // which will store whether we are currently saving data to the server.
+        // We also have a function called setSaving that we can use to update the saving state.
+        // This is similar to loading, but for saving data.
+        const [saving, setSaving] = useState(false);
+
+        // Run the code inside this function when this component is mounted.
+        // (In other words, when the component is first shown on the page.)
+        // This is where we fetch our todos from the backend.
+        useEffect(() => {
+          async function fetchTodos() {
+            try {
+              // Fetch our todos from the backend.
+              // NOTE: We are using the browser's Fetch API here.
+              // By default, the Fetch API uses the GET method when
+              // making requests. We will use other methods later.
+
+              const response = await fetch(`${BACKEND_URL}/todos`);
+              const fetchedTodos = await response.json();
+              setTodos(fetchedTodos); // Set our todos to the data we fetched.
+            } catch (error) {
+              console.error("Error fetching todos:", error);
+            } finally {
+              setLoading(false); // Set loading to false when we are done.
+            }
+          }
+
+          fetchTodos(); // Call our fetchTodos function.
+        }, []); // <-- The empty array means the code above will only run once when the component mounts.
+
+        // Function to handle the form submission.
+        const handleSubmit = async (e) => {
+          e.preventDefault(); // Prevent the default form submission behavior.
+          setLoading(true); // Set loading to true while we are submitting the form.
+
+          try {
+            // Send a POST request to the backend to create a new todo.
+            // We are using the browser's Fetch API here.
+            // By specifying the method as "POST", we are telling the server
+            // that we want to create a new todo item. We also specify the
+            // headers and body of the request.
+            // ---
+            // 'Content-Type': 'application/json' tells the server that we are
+            // sending JSON data in the request body.
+            // 'body' contains the data we want to send to the server that
+            // the API will receive and process.
+            const response = await fetch(`${BACKEND_URL}/todos`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: newTodo,
+            });
+
+            // If the request was successful, update our todos state with the new todo.
+            // (The endpoint should return the newly created todo item from the response.)
+            if (response.ok) {
+              const newTodo = await response.json();
+              setTodos([...todos, newTodo]); // Add the new todo to our list.
+              setNewTodo(""); // Clear the input field.
+            } else {
+              // Notify the user if there was an error adding the todo.
+              alert("Something went wrong when attempting to add a new todo.");
+            }
+          } catch (error) {
+            console.error("Error adding todo:", error);
+            alert("Something went wrong when attempting to add a new todo.");
+          } finally {
+            setLoading(false); // Set loading to false when we are done.
+          }
+        };
+
+        // Function to handle the save action, which should send our todos on the client
+        // to the backend to save them.
+        const handleSave = async () => {
+          setSaving(true); // Set saving to true while we are saving the todos.
+          try {
+            // Send a PUT request to the backend to save our todos.
+            // We are using the browser's Fetch API here.
+            // By specifying the method as "PUT", we are telling the server
+            // that we want to update the list of todos. We also specify the
+            // headers and body of the request.
+            // ---
+            // 'Content-Type': 'application/json' tells the server that we are
+            // sending JSON data in the request body.
+            // 'body' contains the data we want to send to the server that
+            // the API will receive and process.
+            const response = await fetch(`${BACKEND_URL}/todos`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(todos),
+            });
+
+            // If the request was successful, notify the user that the todos were saved.
+            if (response.ok) {
+              alert("Todos saved successfully!");
+            } else {
+              // Notify the user if there was an error saving the todos.
+              alert("Something went wrong when attempting to save your todos.");
+            }
+          } catch (error) {
+            console.error("Error saving todos:", error);
+            alert("Something went wrong when attempting to save your todos.");
+          } finally {
+            setSaving(false); // Set saving to false when we are done.
+          }
+        };
+
+        // Display the following JSX (HTML-like elements) to the page.
+        return (
+          <>
+            <h1>My Todos</h1>
+
+            {/* Form to add a new todo. */}
+            <form onSubmit={handleSubmit}>
+              {/* Input field to add a new todo. */}
+              <input
+                type="text"
+                value={newTodo}
+                placeholder="What needs to be done?"
+                onChange={(event) => setNewTodo(event.target.value)}
+              />
+
+              {/* Button to submit the form. */}
+              <button disabled={!newTodo.length || loading} type="submit">
+                Add{loading && newTodo.length ? "ing Todo..." : " Todo"}
+              </button>
+
+              {/* Button to save the todos. */}
+              <button disabled={saving || loading} onClick={handleSave}>
+                Sav{saving ? "ing..." : "e Todos"}
+              </button>
+            </form>
+            <hr />
+
+            {/*
+              Conditionally show content depending on the loading state variable.
+              If loading is true, show a loading message. Otherwise, show the list of todos.
+            */}
+            {loading ? <i>Loading...</i> : <TodoList items={todos} />}
+          </>
+        );
+      };
+
+      // Display our App component to the page.
+      ReactDOM.render(<App />, document.getElementById("entry"));
+    </script>
+  </body>
+</html>
