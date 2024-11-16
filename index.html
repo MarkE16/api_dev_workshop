@@ -35,23 +35,28 @@ https://react.dev/docs/getting-started.html
 
     <script type="text/babel">
       const { useState, useEffect } = React;
-      const BACKEND_URL = "http://localhost:5120"; // Where our API is running.
+      const BACKEND_URL = "http://localhost:5120/api"; // Where our API is running.
 
       // Our TodoItem component.
       // This will show a single todo item.
-      const TodoItem = ({ item }) => {
-        // Use the useState hook to create a state variable called completed,
-        // which will store whether the todo item is completed or not.
-        // We also have a function called setCompleted that we can use to update the completed state.
-        const [completed, setCompleted] = useState(item.completed);
-
+      const TodoItem = ({ item, setItems }) => {
         // Use the useState hook to create a state variable called updating,
         // which will store whether we are currently updating the todo item.
         // We also have a function called setUpdating that we can use to update the updating state.
         // It is similar to loading and saving, but for updating the todo's current state (when editing or deleting).
         const [updating, setUpdating] = useState(false);
 
-        const onCompletedChange = (event) => setCompleted(event.target.checked);
+        const onCompletedChange = (event) => {
+          setItems((prevItems) => {
+            const index = prevItems.findIndex((i) => i.id === item.id);
+            const newItems = [...prevItems];
+            newItems[index] = {
+              ...newItems[index],
+              completed: event.target.checked,
+            };
+            return newItems;
+          });
+        };
 
         // Function to handle editing a todo item.
         const handleEdit = async () => {
@@ -74,11 +79,21 @@ https://react.dev/docs/getting-started.html
               headers: {
                 "Content-Type": "application/json",
               },
-              body: newTitle,
+              body: JSON.stringify({
+                name: newTitle,
+              }),
             });
 
             if (request.ok) {
               alert("Todo updated successfully!");
+
+              // Update the todo item's title in the UI.
+              setItems((prevItems) => {
+                const index = prevItems.findIndex((i) => i.id === item.id);
+                const newItems = [...prevItems];
+                newItems[index] = { ...newItems[index], name: newTitle };
+                return newItems;
+              });
             } else {
               alert("Failed to update todo.");
             }
@@ -107,6 +122,11 @@ https://react.dev/docs/getting-started.html
 
             if (request.ok) {
               alert("Todo deleted successfully!");
+
+              // Remove the todo item from the UI.
+              setItems((prevItems) =>
+                prevItems.filter((i) => i.id !== item.id),
+              );
             } else {
               alert("Failed to delete todo.");
             }
@@ -124,18 +144,18 @@ https://react.dev/docs/getting-started.html
             <input
               id={item.id}
               type="checkbox"
-              checked={completed}
+              checked={item.completed}
               onChange={onCompletedChange}
             />
             <li>
               <label
                 style={{
-                  textDecoration: completed ? "line-through" : "none",
-                  color: completed ? "gray" : "black",
+                  textDecoration: item.completed ? "line-through" : "none",
+                  color: item.completed ? "gray" : "black",
                 }}
                 htmlFor={item.id}
               >
-                {item.title}
+                {item.name}
               </label>
             </li>
             <button disabled={updating} onClick={handleEdit}>
@@ -151,12 +171,16 @@ https://react.dev/docs/getting-started.html
       // Our TodoList component.
       // This will show a list of todos based on what we pass into the
       // items prop (or parameter, if you're not familiar with React yet)
-      const TodoList = ({ items }) => {
+      const TodoList = ({ items, setItems }) => {
         // Display the following JSX (HTML-like elements) to the page when this component is rendered.
+
+        if (!items.length) {
+          return <p>No todos found.</p>;
+        }
         return (
           <ul>
             {items.map((item) => (
-              <TodoItem key={item.id} item={item} />
+              <TodoItem key={item.id} item={item} setItems={setItems} />
             ))}
           </ul>
         );
@@ -168,18 +192,7 @@ https://react.dev/docs/getting-started.html
         // Use the useState hook to create a state variable called todos,
         // which will store our list of todos.
         // We also have a function called setTodos that we can use to update the todos state.
-        const [todos, setTodos] = useState([
-          {
-            id: 1,
-            title: "Learn React",
-            completed: false,
-          },
-          {
-            id: 2,
-            title: "Learn Node.js",
-            completed: false,
-          },
-        ]);
+        const [todos, setTodos] = useState([]);
 
         // Use the useState hook to create a state variable called newTodo,
         // which will store the title of a new todo item.
@@ -207,7 +220,7 @@ https://react.dev/docs/getting-started.html
               // Fetch our todos from the backend.
               // NOTE: We are using the browser's Fetch API here.
               // By default, the Fetch API uses the GET method when
-              // making requests. We will use other methods later.
+              // making requests, so we don't need to specify it here.
 
               const response = await fetch(`${BACKEND_URL}/todos`);
               const fetchedTodos = await response.json();
@@ -243,7 +256,9 @@ https://react.dev/docs/getting-started.html
               headers: {
                 "Content-Type": "application/json",
               },
-              body: newTodo,
+              body: JSON.stringify({
+                name: newTodo,
+              }),
             });
 
             // If the request was successful, update our todos state with the new todo.
@@ -314,6 +329,7 @@ https://react.dev/docs/getting-started.html
                 type="text"
                 value={newTodo}
                 placeholder="What needs to be done?"
+                disabled={loading}
                 onChange={(event) => setNewTodo(event.target.value)}
               />
 
@@ -333,7 +349,11 @@ https://react.dev/docs/getting-started.html
               Conditionally show content depending on the loading state variable.
               If loading is true, show a loading message. Otherwise, show the list of todos.
             */}
-            {loading ? <i>Loading...</i> : <TodoList items={todos} />}
+            {loading ? (
+              <i>Loading...</i>
+            ) : (
+              <TodoList items={todos} setItems={setTodos} />
+            )}
           </>
         );
       };
