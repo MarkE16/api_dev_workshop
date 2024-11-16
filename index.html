@@ -62,7 +62,7 @@ https://react.dev/docs/getting-started.html
         const handleEdit = async () => {
           const newTitle = window.prompt("What should this todo be called?");
 
-          if (!newTitle) {
+          if (!newTitle.trim()) {
             alert("Cannot allow an empty todo title.");
             return;
           }
