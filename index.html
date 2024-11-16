@@ -221,6 +221,8 @@ https://react.dev/docs/getting-started.html
               // NOTE: We are using the browser's Fetch API here.
               // By default, the Fetch API uses the GET method when
               // making requests, so we don't need to specify it here.
+              // However, if you want to be explicit, you can do so like this:
+              // const response = await fetch(`${BACKEND_URL}/todos`, { method: "GET" });
 
               const response = await fetch(`${BACKEND_URL}/todos`);
               const fetchedTodos = await response.json();
