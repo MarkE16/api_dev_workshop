@@ -140,7 +140,7 @@ https://react.dev/docs/getting-started.html
 
         // Display the following JSX (HTML-like elements) to the page when this component is rendered.
         return (
-          <div style={{ display: "flex", listStyle: "none" }}>
+          <div className="todo">
             <input
               id={item.id}
               type="checkbox"
@@ -361,5 +361,35 @@ https://react.dev/docs/getting-started.html
       // Display our App component to the page.
       ReactDOM.render(<App />, document.getElementById("entry"));
     </script>
+    <style>
+        /* styles for the buttons */
+        button {
+            margin-left: 5px;
+            border-radius: 5px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        
+        /* styles for when the button is disabled */
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* styles for the todo item */
+        .todo {
+            display: flex;
+            list-style-type: none;
+            margin: 10px 0;
+        }
+
+        /* styles for the buttons that are children of the elements with the class "todo" */
+        .todo > button {
+            padding: 3px 7px;
+        }
+    </style>
   </body>
 </html>
