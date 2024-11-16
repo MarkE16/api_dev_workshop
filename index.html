@@ -358,7 +358,9 @@ https://react.dev/docs/getting-started.html
         );
       };
 
-      // Display our App component to the page.
+      // Display our App component to the page by rendering it to the DOM.
+      // This is the entry point of our React application,
+      // where we tell React to render our App component inside the element with the ID "entry".
       ReactDOM.render(<App />, document.getElementById("entry"));
     </script>
     <style>
